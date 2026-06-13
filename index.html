@@ -1,0 +1,609 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>DrinkDex - Le RPG de ta Santé</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --poke-brown: #7b675b;
+            --poke-dark-brown: #3a2e26;
+            --poke-beige: #ccbaa1;
+            --poke-light-beige: #f5eedc;
+            --poke-yellow: #ffcc00;
+            --poke-green: #2ecc71;
+            --poke-red: #ff4757;
+            --poke-border: 3px solid #3a2e26;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; }
+
+        body {
+            background-color: #ffffff;
+            font-family: 'VT323', monospace;
+            font-size: 20px;
+            color: var(--poke-dark-brown);
+            margin: 0;
+            padding: 10px;
+            display: flex;
+            justify-content: center;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .pokedex-container {
+            max-width: 650px;
+            width: 100%;
+            background-color: var(--poke-light-beige);
+            border: var(--poke-border);
+            border-radius: 10px;
+            box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
+            padding: 12px;
+        }
+
+        header {
+            text-align: center;
+            background-color: var(--poke-brown);
+            border: var(--poke-border);
+            padding: 12px;
+            margin-bottom: 15px;
+            color: white;
+            border-radius: 5px;
+        }
+        header h1 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            margin: 0;
+            text-shadow: 2px 2px 0 var(--poke-dark-brown);
+            color: var(--poke-yellow);
+        }
+
+        .poke-card {
+            background-color: #ffffff;
+            border: var(--poke-border);
+            border-radius: 5px;
+            padding: 12px;
+            margin-bottom: 15px;
+            position: relative;
+        }
+
+        .poke-card h2 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 11px;
+            margin-top: 0;
+            margin-bottom: 12px;
+            color: var(--poke-brown);
+            text-transform: uppercase;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            line-height: 1.4;
+        }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+        .form-grid.three-cols { grid-template-columns: 1fr; }
+
+        .field-group { display: flex; flex-direction: column; }
+        .field-group label { font-size: 16px; margin-bottom: 2px; font-weight: bold; }
+
+        input, select {
+            font-family: 'VT323', monospace;
+            font-size: 18px;
+            padding: 8px;
+            border: 2px solid var(--poke-brown);
+            background-color: #fff;
+            color: var(--poke-dark-brown);
+            outline: none;
+            border-radius: 4px;
+            width: 100%;
+            -webkit-appearance: none;
+        }
+        input:focus, select:focus { border-color: var(--poke-yellow); }
+
+        button {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            padding: 12px 10px;
+            border: var(--poke-border);
+            background-color: var(--poke-beige);
+            color: var(--poke-dark-brown);
+            cursor: pointer;
+            box-shadow: 2px 2px 0px #3a2e26;
+            transition: all 0.1s;
+            border-radius: 4px;
+            width: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 5px;
+        }
+        button:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #3a2e26; }
+        button.btn-success { background-color: var(--poke-green); color: white; }
+        button.btn-danger { background-color: var(--poke-red); color: white; }
+        button.btn-primary { background-color: #4facfe; color: white; }
+
+        .oms-box {
+            border-left: 6px solid var(--poke-brown);
+            background-color: var(--poke-light-beige);
+            padding: 10px;
+            font-size: 16px;
+            margin-top: 10px;
+            line-height: 1.2;
+        }
+        
+        .source-text {
+            font-family: sans-serif;
+            font-size: 10px;
+            color: #555;
+            margin-top: 8px;
+            line-height: 1.3;
+        }
+
+        .save-msg {
+            color: var(--poke-green);
+            font-weight: bold;
+            font-size: 16px;
+            text-align: center;
+            opacity: 0;
+            transition: opacity 0.3s;
+            margin-top: 5px;
+            height: 20px;
+        }
+
+        .stats-row {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 8px;
+        }
+        .stat-display {
+            text-align: center;
+            border: 2px solid var(--poke-brown);
+            background: #fcfcfc;
+            padding: 8px;
+            border-radius: 4px;
+        }
+        .stat-num {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 16px;
+            margin: 5px 0 0 0;
+        }
+
+        /* Container du graphique Canvas */
+        .chart-container {
+            position: relative;
+            height: 200px;
+            width: 100%;
+            margin-top: 10px;
+            background: white;
+            border: 2px solid var(--poke-brown);
+            border-radius: 4px;
+            padding: 5px;
+        }
+
+        .gamification-box { text-align: center; }
+        .piggy-avatar {
+            font-size: 45px;
+            color: #ff9a9e;
+            margin: 10px 0;
+            display: inline-block;
+            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+        }
+        
+        .trophy-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 5px;
+            margin-top: 15px;
+        }
+        .trophy-item {
+            text-align: center;
+            opacity: 0.2;
+            filter: grayscale(100%);
+            transition: all 0.4s;
+            font-size: 12px;
+            line-height: 1.2;
+        }
+        .trophy-item.unlocked { opacity: 1; filter: grayscale(0%); transform: scale(1.05); }
+        .trophy-item i { font-size: 24px; color: var(--poke-yellow); margin-bottom: 4px; display: block; }
+
+        .reward-banner {
+            background-color: #fff9db;
+            border: 2px dashed var(--poke-yellow);
+            padding: 8px;
+            font-size: 14px;
+            margin-top: 10px;
+            text-align: center;
+        }
+
+        hr { border: 0; border-top: 2px dashed var(--poke-brown); margin: 15px 0; }
+
+        @media (min-width: 450px) {
+            .form-grid.three-cols { grid-template-columns: 1fr 1fr 1fr; }
+            .stats-row { grid-template-columns: 1fr 1fr; }
+            .chart-container { height: 250px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="pokedex-container">
+    <header>
+        <h1><i class="fa-solid fa-gamepad"></i> DRINKDEX v1.6</h1>
+    </header>
+
+    <div class="poke-card">
+        <h2><i class="fa-solid fa-user-ninja"></i> Stats du Dresseur</h2>
+        <div class="form-grid">
+            <div class="field-group">
+                <label>Genre</label>
+                <select id="p-gender">
+                    <option value="M">Homme</option>
+                    <option value="F">Femme</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <label>Âge</label>
+                <input type="number" id="p-age" value="25" min="18" max="99">
+            </div>
+            <div class="field-group">
+                <label>Taille(cm)</label>
+                <input type="number" id="p-height" value="175" min="100" max="230">
+            </div>
+            <div class="field-group">
+                <label>Poids(kg)</label>
+                <input type="number" id="p-weight" value="70" min="30" max="200">
+            </div>
+        </div>
+        
+        <div style="display: flex; flex-direction: column; align-items: center; margin-top: 8px;">
+            <button class="btn-primary" onclick="saveProfileData()"><i class="fa-solid fa-floppy-disk"></i> ENREGISTRER PROFIL</button>
+            <div id="save-msg" class="save-msg"></div>
+        </div>
+
+        <div class="oms-box" id="oms-alert-text">Remplis ton profil et enregistre...</div>
+        <div class="source-text">
+            <strong>Sources :</strong> "Max 2 verres/jour, pas tous les jours" (Santé Publique France). L'OMS (2023) rappelle qu'<strong>aucune conso n'est totalement sans risque</strong>. 
+        </div>
+    </div>
+
+    <div class="poke-card">
+        <h2><i class="fa-solid fa-flask"></i> Ajouter conso (Auj.)</h2>
+        <div class="form-grid three-cols">
+            <div class="field-group">
+                <label>Breuvage</label>
+                <select id="drink-type">
+                    <option value="1">1 Verre Standard</option>
+                    <option value="6">Bouteille Vin (75cl)</option>
+                    <option value="8">Pack Bières (6x33)</option>
+                    <option value="22">Bouteille Fort(70cl)</option>
+                </select>
+            </div>
+            <div class="field-group">
+                <label>Prix Total (€)</label>
+                <input type="number" id="drink-price" placeholder="0" min="0" step="0.5">
+            </div>
+            <div class="field-group">
+                <label>Divisé par</label>
+                <input type="number" id="drink-share" value="1" min="1">
+            </div>
+        </div>
+        <div style="display: flex; gap: 8px; margin-top: 10px;">
+            <button class="btn-success" onclick="submitConso()"><i class="fa-solid fa-plus"></i> AJOUTER</button>
+            <button class="btn-danger" onclick="resetDay()"><i class="fa-solid fa-trash"></i> EFFACER</button>
+        </div>
+    </div>
+
+    <div class="poke-card">
+        <h2><i class="fa-solid fa-chart-bar"></i> Écran de Contrôle</h2>
+        <div class="stats-row">
+            <div class="stat-display" id="border-drinks">
+                <span style="font-size:12px; text-transform:uppercase; font-weight:bold;">Unités (Auj.)</span>
+                <div class="stat-num" id="count-drinks">0</div>
+            </div>
+            <div class="stat-display">
+                <span style="font-size:12px; text-transform:uppercase; font-weight:bold;">Dépensé (Auj.)</span>
+                <div class="stat-num" id="count-spent" style="color:var(--poke-red)">0 €</div>
+            </div>
+        </div>
+
+        <hr>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+            <span style="font-family:'Press Start 2P'; font-size:10px; color:var(--poke-brown)">Graphe Cumulé</span>
+            <select id="chart-view" onchange="renderChart()" style="width: auto; font-size: 14px; padding: 2px;">
+                <option value="days">7 Jours</option>
+                <option value="weeks">4 Semaines</option>
+                <option value="months">6 Mois</option>
+            </select>
+        </div>
+        
+        <div class="chart-container">
+            <canvas id="historyChart"></canvas>
+        </div>
+    </div>
+
+    <div class="poke-card gamification-box">
+        <h2><i class="fa-solid fa-coins"></i> L'anti-Banque</h2>
+        <p style="margin: 0; font-size: 14px;">Budget max autorisé : <strong>15.00 € / jour</strong></p>
+        <div><i class="fa-solid fa-piggy-bank piggy-avatar" id="piggy-icon"></i></div>
+        <div style="font-family: 'Press Start 2P'; font-size: 14px; color: var(--poke-green); margin-bottom: 5px;" id="piggy-cash">
+            + 0.00 €
+        </div>
+        <div class="reward-banner" id="reward-text">Niveau 1 : Novice</div>
+        <hr>
+        <div class="trophy-grid">
+            <div class="trophy-item" id="t-sober"><i class="fa-solid fa-star"></i><strong>Sobriété</strong><br>0 verre</div>
+            <div class="trophy-item" id="t-eco"><i class="fa-solid fa-gem"></i><strong>Économe</strong><br>0€ dépensé</div>
+            <div class="trophy-item" id="t-master"><i class="fa-solid fa-shield-heart"></i><strong>Top Santé</strong><br>Sous la limite</div>
+        </div>
+    </div>
+</div>
+
+<script>
+    const BUDGET_QUOTIDIEN = 15; 
+    let db = JSON.parse(localStorage.getItem('drinkDexData_v6'));
+    
+    if (!db || typeof db !== 'object' || !db.profile || !db.history) {
+        db = {
+            profile: { gender: 'M', age: 25, height: 175, weight: 70 },
+            history: {}, 
+            totalSavings: 0
+        };
+    }
+
+    // Instance globale du graphique
+    let drinkChart = null;
+
+    function getTodayStr() {
+        const d = new Date();
+        return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+    }
+
+    // --- SAUVEGARDE EXPLICITE (Fixe le bug de l'âge) ---
+    function saveProfileData() {
+        // Enregistre les valeurs. Si vide, on applique la valeur par défaut pour éviter de casser les maths.
+        db.profile.gender = document.getElementById('p-gender').value || 'M';
+        db.profile.age = parseInt(document.getElementById('p-age').value) || 25;
+        db.profile.height = parseInt(document.getElementById('p-height').value) || 175;
+        db.profile.weight = parseInt(document.getElementById('p-weight').value) || 70;
+        
+        localStorage.setItem('drinkDexData_v6', JSON.stringify(db));
+        
+        // Rafraîchit l'UI
+        renderApp();
+        
+        let msg = document.getElementById('save-msg');
+        msg.innerText = '✔ Profil enregistré';
+        msg.style.opacity = '1';
+        setTimeout(() => { msg.style.opacity = '0'; }, 2000);
+    }
+
+    // --- AJOUT CONSO ---
+    function submitConso() {
+        const type = parseFloat(document.getElementById('drink-type').value) || 1;
+        const totalPrice = parseFloat(document.getElementById('drink-price').value) || 0;
+        const share = parseInt(document.getElementById('drink-share').value) || 1;
+
+        const glassesAdded = type / share;
+        const costAdded = totalPrice / share;
+
+        const today = getTodayStr();
+        if (!db.history[today]) db.history[today] = { drinks: 0, spent: 0 };
+
+        db.history[today].drinks += glassesAdded;
+        db.history[today].spent += costAdded;
+
+        document.getElementById('drink-price').value = ""; 
+        
+        localStorage.setItem('drinkDexData_v6', JSON.stringify(db));
+        renderApp();
+    }
+
+    function resetDay() {
+        if(confirm("Effacer toutes les consos de ce jour ?")) {
+            const today = getTodayStr();
+            db.history[today] = { drinks: 0, spent: 0 };
+            localStorage.setItem('drinkDexData_v6', JSON.stringify(db));
+            renderApp();
+        }
+    }
+
+    // --- MOTEUR D'AFFICHAGE ---
+    function renderApp() {
+        const today = getTodayStr();
+        const currentData = db.history[today] || { drinks: 0, spent: 0 };
+        
+        const currentDrinks = currentData.drinks || 0;
+        const currentSpent = currentData.spent || 0;
+
+        // On repeuple les inputs SEULEMENT si l'utilisateur n'est pas en train de taper dedans.
+        // Comme on a retiré le oninput, on peut les repeupler de force au chargement/sauvegarde.
+        document.getElementById('p-gender').value = db.profile.gender;
+        document.getElementById('p-age').value = db.profile.age;
+        document.getElementById('p-height').value = db.profile.height;
+        document.getElementById('p-weight').value = db.profile.weight;
+
+        document.getElementById('count-drinks').innerText = currentDrinks.toFixed(1);
+        document.getElementById('count-spent').innerText = currentSpent.toFixed(2) + " €";
+
+        // CALCUL OMS & IMC
+        const limitOms = 2;
+        const imc = (db.profile.weight / ((db.profile.height / 100) * (db.profile.height / 100))) || 0;
+        
+        let omsBox = document.getElementById('oms-alert-text');
+        let cardBorder = document.getElementById('border-drinks');
+
+        let msgOms = `IMC calculé: <strong>${imc.toFixed(1)}</strong>.<br>`;
+        
+        if (currentDrinks === 0) {
+            msgOms += "<span style='color:var(--poke-green)'>✔ Sang Pur : 0 toxine auj !</span>";
+            cardBorder.style.backgroundColor = "#e6ffe6";
+        } else if (currentDrinks <= limitOms) {
+            msgOms += "<span style='color:var(--poke-yellow)'>⚠ Zone de tolérance (Max 2/j).</span>";
+            cardBorder.style.backgroundColor = "#fffde6";
+        } else {
+            msgOms += "<span style='color:var(--poke-red); font-weight:bold;'>❌ ALERTE : Limite dépassée !</span>";
+            cardBorder.style.backgroundColor = "#ffe6e6";
+        }
+        omsBox.innerHTML = msgOms;
+
+        // TIRELIRE
+        let dailySavings = BUDGET_QUOTIDIEN - currentSpent;
+        let piggyCash = document.getElementById('piggy-cash');
+        let piggyIcon = document.getElementById('piggy-icon');
+
+        if (dailySavings >= 0) {
+            piggyCash.innerText = "+ " + dailySavings.toFixed(2) + " € (Sauvés)";
+            piggyCash.style.color = "var(--poke-green)";
+            piggyIcon.style.color = "#ff9a9e";
+            let scale = 1 + (dailySavings / 40);
+            piggyIcon.style.transform = `scale(${Math.min(scale, 1.4)})`;
+        } else {
+            piggyCash.innerText = dailySavings.toFixed(2) + " € (Déficit!)";
+            piggyCash.style.color = "var(--poke-red)";
+            piggyIcon.style.color = "#7f8c8d";
+            piggyIcon.style.transform = "scale(0.8) rotate(-15deg)";
+        }
+
+        // TITRES
+        let rewardText = document.getElementById('reward-text');
+        if (currentDrinks === 0 && currentSpent === 0) rewardText.innerHTML = "🏆 <strong style='color:var(--poke-green)'>Paladin Puritaire !</strong>";
+        else if (currentDrinks <= limitOms && dailySavings > 0) rewardText.innerHTML = "🏹 <strong>Chasseur Économe.</strong>";
+        else rewardText.innerHTML = "💀 <strong>Statut : Zombie Bourru.</strong>";
+
+        toggleTrophy('t-sober', currentDrinks === 0);
+        toggleTrophy('t-eco', currentSpent === 0);
+        toggleTrophy('t-master', currentDrinks > 0 && currentDrinks <= limitOms);
+
+        renderChart();
+    }
+
+    function toggleTrophy(id, condition) {
+        const el = document.getElementById(id);
+        if (condition) el.classList.add('unlocked');
+        else el.classList.remove('unlocked');
+    }
+
+    // --- GRAPHIQUE AVEC CHART.JS ---
+    function renderChart() {
+        const view = document.getElementById('chart-view').value;
+        let labels = [];
+        let data = [];
+        const today = new Date();
+
+        function getDrinksForDate(dStr) {
+            return db.history[dStr] ? (db.history[dStr].drinks || 0) : 0;
+        }
+
+        if (view === 'days') {
+            for (let i = 6; i >= 0; i--) {
+                let d = new Date(today);
+                d.setDate(today.getDate() - i);
+                let dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                labels.push(String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0'));
+                data.push(getDrinksForDate(dateStr));
+            }
+        } 
+        else if (view === 'weeks') {
+            for (let i = 3; i >= 0; i--) {
+                let sumDrinks = 0;
+                for(let j = 6; j >= 0; j--) {
+                    let d = new Date(today);
+                    d.setDate(today.getDate() - (i*7 + j));
+                    let dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                    sumDrinks += getDrinksForDate(dateStr);
+                }
+                labels.push(i === 0 ? 'Sem. Act' : 'S-'+i);
+                data.push(sumDrinks);
+            }
+        } 
+        else if (view === 'months') {
+            for (let i = 5; i >= 0; i--) {
+                let d = new Date(today.getFullYear(), today.getMonth() - i, 1);
+                let monthStr = String(d.getMonth() + 1).padStart(2, '0');
+                let yearStr = String(d.getFullYear());
+                let prefix = yearStr + '-' + monthStr;
+                
+                let sumDrinks = 0;
+                for (const [key, value] of Object.entries(db.history)) {
+                    if (key.startsWith(prefix)) {
+                        sumDrinks += (value.drinks || 0);
+                    }
+                }
+                labels.push(monthStr + '/' + yearStr.slice(-2));
+                data.push(sumDrinks);
+            }
+        }
+
+        // Destruction de l'ancien graphique pour faire la nouvelle animation
+        const ctx = document.getElementById('historyChart').getContext('2d');
+        if (drinkChart !== null) {
+            drinkChart.destroy();
+        }
+
+        // Création du nouveau beau graphique
+        drinkChart = new Chart(ctx, {
+            type: 'line',
+            data: {
+                labels: labels,
+                datasets: [{
+                    label: 'Unités d\'alcool',
+                    data: data,
+                    borderColor: '#7b675b', // poke-brown
+                    backgroundColor: 'rgba(255, 204, 0, 0.4)', // poke-yellow transparent pour le remplissage
+                    borderWidth: 3,
+                    pointBackgroundColor: '#ffcc00', // points jaunes
+                    pointBorderColor: '#3a2e26', // bordure des points foncée
+                    pointRadius: 6,
+                    pointHoverRadius: 8,
+                    fill: true, // remplit sous la courbe
+                    tension: 0.3 // Courbe fluide et dynamique
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                animation: {
+                    duration: 1200,
+                    easing: 'easeOutQuart'
+                },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        grid: { color: '#f1f2f6' },
+                        ticks: { font: { family: "'VT323', monospace", size: 16 } }
+                    },
+                    x: {
+                        grid: { display: false },
+                        ticks: { font: { family: "'VT323', monospace", size: 14 } }
+                    }
+                },
+                plugins: {
+                    legend: { display: false }, // Cache la légende pour faire plus épuré
+                    tooltip: {
+                        titleFont: { family: "'VT323', monospace", size: 16 },
+                        bodyFont: { family: "'VT323', monospace", size: 18 },
+                        backgroundColor: '#3a2e26',
+                        padding: 10
+                    }
+                }
+            }
+        });
+    }
+
+    // Démarrage
+    renderApp();
+</script>
+
+</body>
+</html>

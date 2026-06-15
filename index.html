@@ -3,607 +3,775 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>DrinkDex - Le RPG de ta Santé</title>
+    <title>DrinkQuest - Arcade Edition</title>
+    
+    <!-- Polices Rétro -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323&display=swap" rel="stylesheet">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
     
+    <!-- Librairie Graphique -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
-    
+
     <style>
+        /* THÈME ARCADE (PAR DÉFAUT) */
         :root {
-            --poke-brown: #7b675b;
-            --poke-dark-brown: #3a2e26;
-            --poke-beige: #ccbaa1;
-            --poke-light-beige: #f5eedc;
-            --poke-yellow: #ffcc00;
-            --poke-green: #2ecc71;
-            --poke-red: #ff4757;
-            --poke-border: 3px solid #3a2e26;
+            --retro-blue: #0000AA;
+            --retro-red: #FF0000;
+            --retro-yellow: #FFFF00;
+            --retro-white: #FFFFFF;
+            --retro-black: #000000;
+            --border-thick: 4px solid var(--retro-white);
+        }
+
+        /* THÈME GAME BOY (NOCTURNE / DOUX) */
+        body.theme-gb {
+            --retro-blue: #8bac0f; 
+            --retro-white: #9bbc0f; 
+            --retro-black: #0f380f; 
+            --retro-red: #306230; 
+            --retro-yellow: #e0f8d0; 
+            --border-thick: 4px solid var(--retro-black);
         }
 
         *, *::before, *::after { box-sizing: border-box; }
 
         body {
-            background-color: #ffffff;
-            font-family: 'VT323', monospace;
-            font-size: 20px;
-            color: var(--poke-dark-brown);
+            background-color: var(--retro-blue);
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            font-size: 16px;
+            color: var(--retro-white);
             margin: 0;
-            padding: 10px;
+            padding: 15px;
             display: flex;
             justify-content: center;
             -webkit-font-smoothing: antialiased;
+            transition: background-color 0.3s ease;
         }
 
-        .pokedex-container {
-            max-width: 650px;
+        .theme-toggle {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: var(--retro-black);
+            color: var(--retro-white);
+            border: 2px solid var(--retro-white);
+            padding: 8px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            cursor: pointer;
+            z-index: 100;
+            border-radius: 4px;
+        }
+
+        .arcade-container {
+            max-width: 700px;
             width: 100%;
-            background-color: var(--poke-light-beige);
-            border: var(--poke-border);
-            border-radius: 10px;
-            box-shadow: 4px 4px 0px rgba(0,0,0,0.1);
-            padding: 12px;
+            margin-top: 30px;
         }
 
-        header {
-            text-align: center;
-            background-color: var(--poke-brown);
-            border: var(--poke-border);
-            padding: 12px;
-            margin-bottom: 15px;
-            color: white;
-            border-radius: 5px;
-        }
-        header h1 {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 16px;
-            margin: 0;
-            text-shadow: 2px 2px 0 var(--poke-dark-brown);
-            color: var(--poke-yellow);
-        }
+        h1, h2, h3 { font-family: 'Press Start 2P', cursive; }
 
-        .poke-card {
-            background-color: #ffffff;
-            border: var(--poke-border);
-            border-radius: 5px;
-            padding: 12px;
-            margin-bottom: 15px;
+        .nes-box {
+            background-color: var(--retro-black);
+            border: var(--border-thick);
+            padding: 20px;
+            margin-bottom: 20px;
             position: relative;
+            box-shadow: 6px 6px 0px var(--retro-red);
+            transition: all 0.3s ease;
+        }
+        .nes-box.white-bg {
+            background-color: var(--retro-white);
+            color: var(--retro-black);
+            border-color: var(--retro-black);
+            box-shadow: 6px 6px 0px var(--retro-yellow);
         }
 
-        .poke-card h2 {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 11px;
+        .nes-box h2 {
+            font-size: 14px;
+            color: var(--retro-yellow);
             margin-top: 0;
-            margin-bottom: 12px;
-            color: var(--poke-brown);
             text-transform: uppercase;
-            display: flex;
-            align-items: center;
-            gap: 8px;
-            line-height: 1.4;
+            line-height: 1.5;
         }
+        .nes-box.white-bg h2 { color: var(--retro-red); }
 
         .form-grid {
             display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 8px;
-            margin-bottom: 10px;
+            grid-template-columns: 1fr;
+            gap: 15px;
+            margin-bottom: 15px;
         }
-        .form-grid.three-cols { grid-template-columns: 1fr; }
-
-        .field-group { display: flex; flex-direction: column; }
-        .field-group label { font-size: 16px; margin-bottom: 2px; font-weight: bold; }
+        @media (min-width: 500px) {
+            .form-grid { grid-template-columns: 1fr 1fr; }
+        }
+        
+        .form-group { display: flex; flex-direction: column; }
+        .form-group label { font-size: 14px; margin-bottom: 5px; font-weight: bold; text-transform: uppercase;}
 
         input, select {
-            font-family: 'VT323', monospace;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
             font-size: 18px;
-            padding: 8px;
-            border: 2px solid var(--poke-brown);
-            background-color: #fff;
-            color: var(--poke-dark-brown);
-            outline: none;
-            border-radius: 4px;
-            width: 100%;
-            -webkit-appearance: none;
-        }
-        input:focus, select:focus { border-color: var(--poke-yellow); }
-
-        button {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 10px;
-            padding: 12px 10px;
-            border: var(--poke-border);
-            background-color: var(--poke-beige);
-            color: var(--poke-dark-brown);
-            cursor: pointer;
-            box-shadow: 2px 2px 0px #3a2e26;
-            transition: all 0.1s;
-            border-radius: 4px;
-            width: 100%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            gap: 5px;
-        }
-        button:active { transform: translate(2px, 2px); box-shadow: 0px 0px 0px #3a2e26; }
-        button.btn-success { background-color: var(--poke-green); color: white; }
-        button.btn-danger { background-color: var(--poke-red); color: white; }
-        button.btn-primary { background-color: #4facfe; color: white; }
-
-        .oms-box {
-            border-left: 6px solid var(--poke-brown);
-            background-color: var(--poke-light-beige);
-            padding: 10px;
-            font-size: 16px;
-            margin-top: 10px;
-            line-height: 1.2;
-        }
-        
-        .source-text {
-            font-family: sans-serif;
-            font-size: 10px;
-            color: #555;
-            margin-top: 8px;
-            line-height: 1.3;
-        }
-
-        .save-msg {
-            color: var(--poke-green);
             font-weight: bold;
-            font-size: 16px;
-            text-align: center;
-            opacity: 0;
-            transition: opacity 0.3s;
-            margin-top: 5px;
-            height: 20px;
-        }
-
-        .stats-row {
-            display: grid;
-            grid-template-columns: 1fr;
-            gap: 8px;
-        }
-        .stat-display {
-            text-align: center;
-            border: 2px solid var(--poke-brown);
-            background: #fcfcfc;
-            padding: 8px;
-            border-radius: 4px;
-        }
-        .stat-num {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 16px;
-            margin: 5px 0 0 0;
-        }
-
-        /* Container du graphique Canvas */
-        .chart-container {
-            position: relative;
-            height: 200px;
+            padding: 10px;
+            background-color: var(--retro-white);
+            color: var(--retro-black);
+            border: 3px solid var(--retro-black);
+            outline: none;
+            box-shadow: inset 2px 2px 0px rgba(0,0,0,0.1);
             width: 100%;
-            margin-top: 10px;
-            background: white;
-            border: 2px solid var(--poke-brown);
-            border-radius: 4px;
-            padding: 5px;
+            max-width: 100%;
+            transition: all 0.2s;
         }
+        input:focus, select:focus { border-color: var(--retro-red); background-color: #fff; }
 
-        .gamification-box { text-align: center; }
-        .piggy-avatar {
-            font-size: 45px;
-            color: #ff9a9e;
-            margin: 10px 0;
-            display: inline-block;
-            transition: transform 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
-        }
-        
-        .trophy-grid {
-            display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: 5px;
-            margin-top: 15px;
-        }
-        .trophy-item {
-            text-align: center;
-            opacity: 0.2;
-            filter: grayscale(100%);
-            transition: all 0.4s;
+        button.btn-retro {
+            font-family: 'Press Start 2P', cursive;
             font-size: 12px;
-            line-height: 1.2;
+            padding: 15px;
+            border: 4px solid var(--retro-white);
+            background-color: var(--retro-red);
+            color: var(--retro-white);
+            cursor: pointer;
+            width: 100%;
+            text-transform: uppercase;
+            box-shadow: inset -4px -4px 0px rgba(0,0,0,0.3);
+            transition: transform 0.1s;
         }
-        .trophy-item.unlocked { opacity: 1; filter: grayscale(0%); transform: scale(1.05); }
-        .trophy-item i { font-size: 24px; color: var(--poke-yellow); margin-bottom: 4px; display: block; }
+        button.btn-retro:active {
+            box-shadow: inset 4px 4px 0px rgba(0,0,0,0.3);
+            transform: translate(2px, 2px);
+        }
+        button.btn-yellow { background-color: var(--retro-yellow); color: var(--retro-black); border-color: var(--retro-black); }
+        button.btn-black { background-color: var(--retro-black); color: var(--retro-white); border-color: var(--retro-white); }
+        button.btn-black.danger { color: var(--retro-red); border-color: var(--retro-red); }
 
-        .reward-banner {
-            background-color: #fff9db;
-            border: 2px dashed var(--poke-yellow);
-            padding: 8px;
-            font-size: 14px;
-            margin-top: 10px;
+        .header-oms {
+            background-color: var(--retro-red);
+            border: var(--border-thick);
+            padding: 12px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 10px;
+            box-shadow: 4px 4px 0px var(--retro-black);
+            transition: all 0.3s;
+        }
+
+        .stats-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; text-align: center; }
+        .stat-val { 
+            font-family: 'VT323', monospace; 
+            font-size: 32px; 
+            margin-top: 5px; 
+            color: var(--retro-yellow); 
+            white-space: nowrap;
+        }
+        .stat-val.red { color: var(--retro-red); }
+
+        /* Panier / Staging Area */
+        .staged-area {
+            margin-top: 15px;
+            padding: 15px;
+            border: 3px dashed var(--retro-black);
+            background-color: rgba(0,0,0,0.05);
+            display: none; 
+        }
+        .staged-area.active {
+            display: block;
+            animation: pop 0.3s ease-in-out;
+        }
+
+        /* Graphique des Verres */
+        .wine-chart-container {
+            display: flex;
+            align-items: flex-end;
+            justify-content: space-around;
+            height: 180px;
+            background-color: #111;
+            border: 3px solid var(--retro-black);
+            padding: 10px 5px;
+            margin-top: 15px;
+            overflow-x: auto;
+        }
+        body.theme-gb .wine-chart-container { background-color: #0f380f; }
+
+        .wine-col {
+            display: flex;
+            flex-direction: column-reverse;
+            align-items: center;
+            width: 40px;
+        }
+        .wine-stack {
+            display: flex;
+            flex-direction: column-reverse;
+            font-size: 18px; 
+            line-height: 1.1;
+            margin-bottom: 5px;
+        }
+        .wine-label {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px;
+            color: var(--retro-yellow);
             text-align: center;
         }
-
-        hr { border: 0; border-top: 2px dashed var(--poke-brown); margin: 15px 0; }
-
-        @media (min-width: 450px) {
-            .form-grid.three-cols { grid-template-columns: 1fr 1fr 1fr; }
-            .stats-row { grid-template-columns: 1fr 1fr; }
-            .chart-container { height: 250px; }
+        .wine-multiplier { 
+            font-family: 'Press Start 2P', cursive;
+            font-size: 8px; 
+            color: var(--retro-white); 
+            text-align: center; 
+            margin-bottom: 4px;
+            background-color: var(--retro-red);
+            padding: 2px 4px;
         }
+
+        .hidden { display: none !important; }
+        .text-blink { animation: blinker 1s linear infinite; color: var(--retro-yellow); font-family: 'Press Start 2P', cursive; font-size: 10px; line-height: 1.6;}
+        body.theme-gb .text-blink { color: var(--retro-black); }
+
+        @keyframes blinker { 50% { opacity: 0; } }
+
+        /* ANIMATIONS */
+        @keyframes shake {
+            0% { transform: translate(1px, 1px) rotate(0deg); }
+            10% { transform: translate(-1px, -2px) rotate(-1deg); }
+            20% { transform: translate(-3px, 0px) rotate(1deg); }
+            30% { transform: translate(3px, 2px) rotate(0deg); }
+            40% { transform: translate(1px, -1px) rotate(1deg); }
+            50% { transform: translate(-1px, 2px) rotate(-1deg); }
+            60% { transform: translate(-3px, 1px) rotate(0deg); }
+            70% { transform: translate(3px, 1px) rotate(-1deg); }
+            80% { transform: translate(-1px, -1px) rotate(1deg); }
+            90% { transform: translate(1px, 2px) rotate(0deg); }
+            100% { transform: translate(1px, -2px) rotate(-1deg); }
+        }
+        .shake-anim { animation: shake 0.5s; }
+
+        @keyframes pop {
+            0% { transform: scale(0.95); opacity: 0.5; }
+            50% { transform: scale(1.05); opacity: 1; color: var(--retro-white); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+        .pop-anim { animation: pop 0.4s ease-in-out; }
+
     </style>
 </head>
 <body>
 
-<div class="pokedex-container">
-    <header>
-        <h1><i class="fa-solid fa-gamepad"></i> DRINKDEX v1.6</h1>
-    </header>
+<!-- BOUTON THÈME -->
+<button class="theme-toggle" onclick="toggleTheme()">🕹️ THÈME</button>
 
-    <div class="poke-card">
-        <h2><i class="fa-solid fa-user-ninja"></i> Stats du Dresseur</h2>
+<div class="arcade-container" id="main-container">
+
+    <!-- ========================================== -->
+    <!-- ÉCRAN 1 : START / TEST OMS                 -->
+    <!-- ========================================== -->
+    <div id="screen-start" class="nes-box">
+        <h1 style="font-size: 20px; color: var(--retro-yellow); text-align: center; margin-bottom: 20px; line-height: 1.5;">
+            🍷 DRINK QUEST<br><span style="font-size: 10px; color: var(--retro-white);">ARCADE EDITION</span>
+        </h1>
+        
+        <p style="text-align: center; margin-bottom: 30px; font-weight: bold; font-size: 14px;">
+            OBJECTIF : Suivre ta santé et ton budget. Remplis tes stats vitales pour calibrer tes HP (Limites).
+        </p>
+
         <div class="form-grid">
-            <div class="field-group">
-                <label>Genre</label>
-                <select id="p-gender">
-                    <option value="M">Homme</option>
-                    <option value="F">Femme</option>
+            <div class="form-group">
+                <label>GENRE</label>
+                <select id="oms-gender">
+                    <option value="M">HOMME</option>
+                    <option value="F">FEMME</option>
                 </select>
             </div>
-            <div class="field-group">
-                <label>Âge</label>
-                <input type="number" id="p-age" value="25" min="18" max="99">
+            <div class="form-group">
+                <label>AGE</label>
+                <input type="number" id="oms-age" value="25" min="18" max="99">
             </div>
-            <div class="field-group">
-                <label>Taille(cm)</label>
-                <input type="number" id="p-height" value="175" min="100" max="230">
+            <div class="form-group">
+                <label>TAILLE (cm)</label>
+                <input type="number" id="oms-height" value="175" min="100" max="250">
             </div>
-            <div class="field-group">
-                <label>Poids(kg)</label>
-                <input type="number" id="p-weight" value="70" min="30" max="200">
+            <div class="form-group">
+                <label>POIDS (kg)</label>
+                <input type="number" id="oms-weight" value="70" min="40" max="200">
             </div>
-        </div>
-        
-        <div style="display: flex; flex-direction: column; align-items: center; margin-top: 8px;">
-            <button class="btn-primary" onclick="saveProfileData()"><i class="fa-solid fa-floppy-disk"></i> ENREGISTRER PROFIL</button>
-            <div id="save-msg" class="save-msg"></div>
         </div>
 
-        <div class="oms-box" id="oms-alert-text">Remplis ton profil et enregistre...</div>
-        <div class="source-text">
-            <strong>Sources :</strong> "Max 2 verres/jour, pas tous les jours" (Santé Publique France). L'OMS (2023) rappelle qu'<strong>aucune conso n'est totalement sans risque</strong>. 
-        </div>
+        <button class="btn-retro" onclick="startGame()">PRESS START</button>
     </div>
 
-    <div class="poke-card">
-        <h2><i class="fa-solid fa-flask"></i> Ajouter conso (Auj.)</h2>
-        <div class="form-grid three-cols">
-            <div class="field-group">
-                <label>Breuvage</label>
-                <select id="drink-type">
-                    <option value="1">1 Verre Standard</option>
-                    <option value="6">Bouteille Vin (75cl)</option>
-                    <option value="8">Pack Bières (6x33)</option>
-                    <option value="22">Bouteille Fort(70cl)</option>
+    <!-- ========================================== -->
+    <!-- ÉCRAN 2 : LE DASHBOARD PRINCIPAL           -->
+    <!-- ========================================== -->
+    <div id="screen-dashboard" class="hidden">
+        
+        <!-- HEADER OMS FIXE -->
+        <div class="header-oms">
+            <div><span style="color:var(--retro-yellow)">♥ HP OMS:</span> <span id="ui-oms-limit"></span></div>
+            <div><span style="color:var(--retro-yellow)">IMC:</span> <span id="ui-bmi"></span></div>
+        </div>
+
+        <!-- SAISIE BUDGET & CONSO -->
+        <div class="nes-box white-bg">
+            <h2>[ INVENTAIRE & DÉPENSES ]</h2>
+            
+            <div class="form-group" style="margin-bottom: 20px;">
+                <label>BUDGET QUOTIDIEN MAX (€)</label>
+                <div style="display: flex; gap: 10px;">
+                    <input type="number" id="input-budget" value="15" style="flex:1;">
+                    <button class="btn-retro btn-yellow" onclick="saveBudget()" style="width: 80px;">OK</button>
+                </div>
+            </div>
+
+            <hr style="border-top: 2px dashed var(--retro-black); margin: 20px 0;">
+
+            <div class="form-grid">
+                <div class="form-group">
+                    <label>BREUVAGE</label>
+                    <select id="drink-type">
+                        <option value="1">1 Verre Standard (1 unité)</option>
+                        <option value="7">Bouteille Vin 75cl (7 u.)</option>
+                        <option value="8">Pack 6 Bières (8 u.)</option>
+                        <option value="22">Bouteille Alcool Fort (22 u.)</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>PRIX PAYÉ (€)</label>
+                    <input type="text" id="drink-price" placeholder="Ex: 5" inputmode="decimal">
+                </div>
+                <div class="form-group" style="grid-column: 1 / -1;">
+                    <label>PARTAGÉ ENTRE (Personnes)</label>
+                    <input type="number" id="drink-share" value="1" min="1">
+                </div>
+            </div>
+            
+            <button class="btn-retro" onclick="stageDrink()">+ AJOUTER EN ATTENTE</button>
+
+            <!-- ZONE TAMPON (PANIER) -->
+            <div id="staged-area" class="staged-area">
+                <div style="font-family: 'Press Start 2P', cursive; font-size: 10px; color: var(--retro-red); margin-bottom: 10px;">[ LISTE D'ATTENTE ]</div>
+                <div id="staged-info" style="font-weight: bold; font-family: 'VT323', monospace; font-size: 24px; color: var(--retro-black); margin-bottom: 15px; text-align: center;">
+                    <!-- Rempli par JS -->
+                </div>
+                <button class="btn-retro btn-yellow" onclick="confirmDaily()">✅ VALIDER LA JOURNÉE</button>
+            </div>
+        </div>
+
+        <!-- STATS DU JOUR -->
+        <div class="nes-box">
+            <h2>[ SCORE DU JOUR ]</h2>
+            <div class="stats-grid">
+                <div id="pop-target-1">
+                    <div style="font-weight: bold; font-size: 14px; font-family: 'Press Start 2P', cursive;">UNITÉS ALCOOL</div>
+                    <div class="stat-val" id="stat-units">0</div>
+                    <div style="font-size: 12px; color:#aaa; font-weight:bold;" id="stat-liters">~ 0 Litre</div>
+                </div>
+                <div id="pop-target-2">
+                    <div style="font-weight: bold; font-size: 14px; font-family: 'Press Start 2P', cursive;">ARGENT DÉPENSÉ</div>
+                    <div class="stat-val red" id="stat-spent">0 €</div>
+                    <div style="font-size: 12px; font-weight:bold;" id="stat-diff">Reste: 0 €</div>
+                </div>
+            </div>
+            <div style="margin-top: 20px; text-align: center; border-top: 2px solid white; padding-top: 15px;">
+                <span id="badge-status" class="text-blink">...</span>
+            </div>
+        </div>
+
+        <!-- SCORES CUMULÉS -->
+        <div class="nes-box">
+            <h2>[ SCORES CUMULÉS ]</h2>
+            <div class="stats-grid">
+                <div>
+                    <div style="font-weight: bold; font-size: 12px; font-family: 'Press Start 2P', cursive; color: var(--retro-white);">7 JOURS</div>
+                    <div class="stat-val" id="stat-week-units">0 U</div>
+                    <div class="stat-val red" id="stat-week-spent">0 €</div>
+                </div>
+                <div>
+                    <div style="font-weight: bold; font-size: 12px; font-family: 'Press Start 2P', cursive; color: var(--retro-white);">MOIS</div>
+                    <div class="stat-val" id="stat-month-units">0 U</div>
+                    <div class="stat-val red" id="stat-month-spent">0 €</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- GRAPHIQUES -->
+        <div class="nes-box white-bg">
+            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 15px;">
+                <h2>[ GRAPHIQUES ]</h2>
+                <select id="chart-filter" onchange="renderCharts()" style="font-size: 14px; padding: 4px; width: auto; font-family: 'Press Start 2P', cursive;">
+                    <option value="days">7 Jours</option>
+                    <option value="weeks">4 Sem.</option>
+                    <option value="months">6 Mois</option>
                 </select>
             </div>
-            <div class="field-group">
-                <label>Prix Total (€)</label>
-                <input type="number" id="drink-price" placeholder="0" min="0" step="0.5">
-            </div>
-            <div class="field-group">
-                <label>Divisé par</label>
-                <input type="number" id="drink-share" value="1" min="1">
-            </div>
-        </div>
-        <div style="display: flex; gap: 8px; margin-top: 10px;">
-            <button class="btn-success" onclick="submitConso()"><i class="fa-solid fa-plus"></i> AJOUTER</button>
-            <button class="btn-danger" onclick="resetDay()"><i class="fa-solid fa-trash"></i> EFFACER</button>
-        </div>
-    </div>
 
-    <div class="poke-card">
-        <h2><i class="fa-solid fa-chart-bar"></i> Écran de Contrôle</h2>
-        <div class="stats-row">
-            <div class="stat-display" id="border-drinks">
-                <span style="font-size:12px; text-transform:uppercase; font-weight:bold;">Unités (Auj.)</span>
-                <div class="stat-num" id="count-drinks">0</div>
+            <!-- GRAPHIQUE 1 : QUANTITÉ (VERRES EMPILÉS) -->
+            <label style="font-family: 'Press Start 2P', cursive; font-size: 10px; color: var(--retro-red);">NIVEAU D'ALCOOL (UNITÉS)</label>
+            <div id="wine-chart" class="wine-chart-container">
+                <!-- Généré par JS -->
             </div>
-            <div class="stat-display">
-                <span style="font-size:12px; text-transform:uppercase; font-weight:bold;">Dépensé (Auj.)</span>
-                <div class="stat-num" id="count-spent" style="color:var(--poke-red)">0 €</div>
+
+            <br>
+            <!-- GRAPHIQUE 2 : ARGENT (CHART.JS RETRO) -->
+            <label style="font-family: 'Press Start 2P', cursive; font-size: 10px; color: var(--retro-blue);">SUIVI FINANCIER (€)</label>
+            <div style="height: 180px; width: 100%; border: 3px solid var(--retro-black); padding: 5px; background: #fff; margin-top: 10px;">
+                <canvas id="moneyChart"></canvas>
             </div>
         </div>
 
-        <hr>
-        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
-            <span style="font-family:'Press Start 2P'; font-size:10px; color:var(--poke-brown)">Graphe Cumulé</span>
-            <select id="chart-view" onchange="renderChart()" style="width: auto; font-size: 14px; padding: 2px;">
-                <option value="days">7 Jours</option>
-                <option value="weeks">4 Semaines</option>
-                <option value="months">6 Mois</option>
-            </select>
+        <!-- BOUTONS RESET SÉPARÉS -->
+        <div style="display: flex; gap: 10px; margin-top: 20px;">
+            <button class="btn-retro btn-black" onclick="resetToday()">EFFACER AUJOURD'HUI</button>
+            <button class="btn-retro btn-black danger" onclick="resetAll()">HARD RESET (TOUT)</button>
         </div>
-        
-        <div class="chart-container">
-            <canvas id="historyChart"></canvas>
-        </div>
+
     </div>
 
-    <div class="poke-card gamification-box">
-        <h2><i class="fa-solid fa-coins"></i> L'anti-Banque</h2>
-        <p style="margin: 0; font-size: 14px;">Budget max autorisé : <strong>15.00 € / jour</strong></p>
-        <div><i class="fa-solid fa-piggy-bank piggy-avatar" id="piggy-icon"></i></div>
-        <div style="font-family: 'Press Start 2P'; font-size: 14px; color: var(--poke-green); margin-bottom: 5px;" id="piggy-cash">
-            + 0.00 €
-        </div>
-        <div class="reward-banner" id="reward-text">Niveau 1 : Novice</div>
-        <hr>
-        <div class="trophy-grid">
-            <div class="trophy-item" id="t-sober"><i class="fa-solid fa-star"></i><strong>Sobriété</strong><br>0 verre</div>
-            <div class="trophy-item" id="t-eco"><i class="fa-solid fa-gem"></i><strong>Économe</strong><br>0€ dépensé</div>
-            <div class="trophy-item" id="t-master"><i class="fa-solid fa-shield-heart"></i><strong>Top Santé</strong><br>Sous la limite</div>
-        </div>
-    </div>
 </div>
 
 <script>
-    const BUDGET_QUOTIDIEN = 15; 
-    let db = JSON.parse(localStorage.getItem('drinkDexData_v6'));
+    // --- ETAT DE JEU ---
+    // On change de clé localStorage pour forcer un démarrage à zéro propre
+    let appData = JSON.parse(localStorage.getItem('drinkQuestData_v11')) || {
+        profile: { gender: 'M', age: 25, height: 175, weight: 70 },
+        omsLimit: 2,
+        dailyBudget: 15,
+        theme: 'arcade', 
+        history: {}
+    };
     
-    if (!db || typeof db !== 'object' || !db.profile || !db.history) {
-        db = {
-            profile: { gender: 'M', age: 25, height: 175, weight: 70 },
-            history: {}, 
-            totalSavings: 0
-        };
+    let moneyChartInstance = null;
+    let stagedConso = { units: 0, spent: 0 };
+
+    if (appData.theme === 'gb') {
+        document.body.classList.add('theme-gb');
     }
 
-    // Instance globale du graphique
-    let drinkChart = null;
-
+    // --- FONCTIONS UTILITAIRES ---
     function getTodayStr() {
-        const d = new Date();
-        return d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+        return new Date().toISOString().split('T')[0];
     }
 
-    // --- SAUVEGARDE EXPLICITE (Fixe le bug de l'âge) ---
-    function saveProfileData() {
-        // Enregistre les valeurs. Si vide, on applique la valeur par défaut pour éviter de casser les maths.
-        db.profile.gender = document.getElementById('p-gender').value || 'M';
-        db.profile.age = parseInt(document.getElementById('p-age').value) || 25;
-        db.profile.height = parseInt(document.getElementById('p-height').value) || 175;
-        db.profile.weight = parseInt(document.getElementById('p-weight').value) || 70;
-        
-        localStorage.setItem('drinkDexData_v6', JSON.stringify(db));
-        
-        // Rafraîchit l'UI
-        renderApp();
-        
-        let msg = document.getElementById('save-msg');
-        msg.innerText = '✔ Profil enregistré';
-        msg.style.opacity = '1';
-        setTimeout(() => { msg.style.opacity = '0'; }, 2000);
+    function toggleTheme() {
+        document.body.classList.toggle('theme-gb');
+        appData.theme = document.body.classList.contains('theme-gb') ? 'gb' : 'arcade';
+        saveData();
+        renderCharts();
     }
 
-    // --- AJOUT CONSO ---
-    function submitConso() {
-        const type = parseFloat(document.getElementById('drink-type').value) || 1;
-        const totalPrice = parseFloat(document.getElementById('drink-price').value) || 0;
-        const share = parseInt(document.getElementById('drink-share').value) || 1;
-
-        const glassesAdded = type / share;
-        const costAdded = totalPrice / share;
-
-        const today = getTodayStr();
-        if (!db.history[today]) db.history[today] = { drinks: 0, spent: 0 };
-
-        db.history[today].drinks += glassesAdded;
-        db.history[today].spent += costAdded;
-
-        document.getElementById('drink-price').value = ""; 
+    function triggerAnimation(isWarning) {
+        const container = document.getElementById('main-container');
+        const pop1 = document.getElementById('pop-target-1');
+        const pop2 = document.getElementById('pop-target-2');
         
-        localStorage.setItem('drinkDexData_v6', JSON.stringify(db));
-        renderApp();
-    }
-
-    function resetDay() {
-        if(confirm("Effacer toutes les consos de ce jour ?")) {
-            const today = getTodayStr();
-            db.history[today] = { drinks: 0, spent: 0 };
-            localStorage.setItem('drinkDexData_v6', JSON.stringify(db));
-            renderApp();
-        }
-    }
-
-    // --- MOTEUR D'AFFICHAGE ---
-    function renderApp() {
-        const today = getTodayStr();
-        const currentData = db.history[today] || { drinks: 0, spent: 0 };
+        container.classList.remove('shake-anim');
+        pop1.classList.remove('pop-anim');
+        pop2.classList.remove('pop-anim');
+        void container.offsetWidth; 
         
-        const currentDrinks = currentData.drinks || 0;
-        const currentSpent = currentData.spent || 0;
-
-        // On repeuple les inputs SEULEMENT si l'utilisateur n'est pas en train de taper dedans.
-        // Comme on a retiré le oninput, on peut les repeupler de force au chargement/sauvegarde.
-        document.getElementById('p-gender').value = db.profile.gender;
-        document.getElementById('p-age').value = db.profile.age;
-        document.getElementById('p-height').value = db.profile.height;
-        document.getElementById('p-weight').value = db.profile.weight;
-
-        document.getElementById('count-drinks').innerText = currentDrinks.toFixed(1);
-        document.getElementById('count-spent').innerText = currentSpent.toFixed(2) + " €";
-
-        // CALCUL OMS & IMC
-        const limitOms = 2;
-        const imc = (db.profile.weight / ((db.profile.height / 100) * (db.profile.height / 100))) || 0;
-        
-        let omsBox = document.getElementById('oms-alert-text');
-        let cardBorder = document.getElementById('border-drinks');
-
-        let msgOms = `IMC calculé: <strong>${imc.toFixed(1)}</strong>.<br>`;
-        
-        if (currentDrinks === 0) {
-            msgOms += "<span style='color:var(--poke-green)'>✔ Sang Pur : 0 toxine auj !</span>";
-            cardBorder.style.backgroundColor = "#e6ffe6";
-        } else if (currentDrinks <= limitOms) {
-            msgOms += "<span style='color:var(--poke-yellow)'>⚠ Zone de tolérance (Max 2/j).</span>";
-            cardBorder.style.backgroundColor = "#fffde6";
+        if (isWarning) {
+            container.classList.add('shake-anim');
         } else {
-            msgOms += "<span style='color:var(--poke-red); font-weight:bold;'>❌ ALERTE : Limite dépassée !</span>";
-            cardBorder.style.backgroundColor = "#ffe6e6";
+            pop1.classList.add('pop-anim');
+            pop2.classList.add('pop-anim');
         }
-        omsBox.innerHTML = msgOms;
+    }
 
-        // TIRELIRE
-        let dailySavings = BUDGET_QUOTIDIEN - currentSpent;
-        let piggyCash = document.getElementById('piggy-cash');
-        let piggyIcon = document.getElementById('piggy-icon');
+    // --- LOGIQUE METIER ---
+    function startGame() {
+        appData.profile.gender = document.getElementById('oms-gender').value;
+        appData.profile.age = parseInt(document.getElementById('oms-age').value) || 25;
+        appData.profile.height = parseInt(document.getElementById('oms-height').value) || 175;
+        appData.profile.weight = parseInt(document.getElementById('oms-weight').value) || 70;
 
-        if (dailySavings >= 0) {
-            piggyCash.innerText = "+ " + dailySavings.toFixed(2) + " € (Sauvés)";
-            piggyCash.style.color = "var(--poke-green)";
-            piggyIcon.style.color = "#ff9a9e";
-            let scale = 1 + (dailySavings / 40);
-            piggyIcon.style.transform = `scale(${Math.min(scale, 1.4)})`;
+        let heightM = appData.profile.height / 100;
+        let bmi = appData.profile.weight / (heightM * heightM);
+        
+        let limit = appData.profile.gender === 'M' ? 3 : 2;
+        if (bmi < 18.5 || appData.profile.age > 65) limit = Math.max(1, limit - 1);
+        
+        appData.omsLimit = limit;
+        
+        document.getElementById('ui-bmi').innerText = bmi.toFixed(1);
+        document.getElementById('ui-oms-limit').innerText = limit + " U/Jour";
+        
+        document.getElementById('input-budget').value = appData.dailyBudget;
+
+        saveData();
+
+        document.getElementById('screen-start').classList.add('hidden');
+        document.getElementById('screen-dashboard').classList.remove('hidden');
+
+        updateDashboard(false);
+    }
+
+    function saveBudget() {
+        appData.dailyBudget = parseFloat(document.getElementById('input-budget').value) || 0;
+        saveData();
+        updateDashboard(false);
+    }
+
+    function stageDrink() {
+        let typeVal = parseFloat(document.getElementById('drink-type').value);
+        let priceRaw = document.getElementById('drink-price').value || "0";
+        let price = parseFloat(priceRaw.replace(',', '.')) || 0;
+        let share = parseInt(document.getElementById('drink-share').value) || 1;
+
+        stagedConso.units += (typeVal / share);
+        stagedConso.spent += (price / share);
+
+        document.getElementById('drink-price').value = "";
+        document.getElementById('drink-share').value = "1";
+
+        document.getElementById('staged-area').classList.add('active');
+        document.getElementById('staged-info').innerText = `+ ${stagedConso.units.toFixed(1)} Unités | + ${stagedConso.spent.toFixed(2)} €`;
+    }
+
+    function confirmDaily() {
+        if (stagedConso.units === 0 && stagedConso.spent === 0) return;
+
+        let today = getTodayStr();
+        if (!appData.history[today]) appData.history[today] = { units: 0, spent: 0 };
+
+        appData.history[today].units += stagedConso.units;
+        appData.history[today].spent += stagedConso.spent;
+
+        stagedConso = { units: 0, spent: 0 };
+        document.getElementById('staged-area').classList.remove('active');
+
+        saveData();
+        updateDashboard(true); 
+    }
+
+    function resetToday() {
+        if(confirm("Effacer toutes les données d'AUJOURD'HUI ? (Cela videra aussi le panier en cours)")) {
+            let today = getTodayStr();
+            if(appData.history[today]) {
+                appData.history[today] = { units: 0, spent: 0 };
+            }
+            stagedConso = { units: 0, spent: 0 };
+            document.getElementById('staged-area').classList.remove('active');
+            
+            saveData();
+            updateDashboard(true);
+        }
+    }
+
+    function resetAll() {
+        if(confirm("ATTENTION : Es-tu sûr de vouloir TOUT effacer (Historique complet) et repartir à zéro ?")) {
+            localStorage.removeItem('drinkQuestData_v11');
+            location.reload();
+        }
+    }
+
+    // --- MISE A JOUR UI ---
+    function updateDashboard(animate = false) {
+        let today = getTodayStr();
+        let dataToday = appData.history[today] || { units: 0, spent: 0 };
+
+        document.getElementById('stat-units').innerText = dataToday.units.toFixed(1);
+        document.getElementById('stat-spent').innerText = dataToday.spent.toFixed(2) + " €";
+        
+        let equivalentLiters = dataToday.units * 0.1;
+        document.getElementById('stat-liters').innerText = `~ ${equivalentLiters.toFixed(2)} L`;
+
+        let diff = appData.dailyBudget - dataToday.spent;
+        let diffEl = document.getElementById('stat-diff');
+        let isOverBudget = diff < 0;
+        let isOverOms = dataToday.units > appData.omsLimit;
+
+        if (!isOverBudget) {
+            diffEl.innerText = `RESTE: +${diff.toFixed(2)} €`;
+            diffEl.style.color = "var(--retro-yellow)";
         } else {
-            piggyCash.innerText = dailySavings.toFixed(2) + " € (Déficit!)";
-            piggyCash.style.color = "var(--poke-red)";
-            piggyIcon.style.color = "#7f8c8d";
-            piggyIcon.style.transform = "scale(0.8) rotate(-15deg)";
+            diffEl.innerText = `DÉFICIT: ${diff.toFixed(2)} €`;
+            diffEl.style.color = "var(--retro-red)";
         }
 
-        // TITRES
-        let rewardText = document.getElementById('reward-text');
-        if (currentDrinks === 0 && currentSpent === 0) rewardText.innerHTML = "🏆 <strong style='color:var(--poke-green)'>Paladin Puritaire !</strong>";
-        else if (currentDrinks <= limitOms && dailySavings > 0) rewardText.innerHTML = "🏹 <strong>Chasseur Économe.</strong>";
-        else rewardText.innerHTML = "💀 <strong>Statut : Zombie Bourru.</strong>";
+        let statusEl = document.getElementById('badge-status');
+        if (dataToday.units === 0 && dataToday.spent === 0) {
+            statusEl.innerText = "🏆 PALADIN : HP MAX !";
+            statusEl.style.color = "var(--retro-yellow)";
+        } else if (!isOverOms && !isOverBudget) {
+            statusEl.innerText = "🛡️ GUERRIER PRUDENT";
+            statusEl.style.color = "var(--retro-white)";
+        } else {
+            statusEl.innerText = "💀 POISON : DÉPASSEMENT !";
+            statusEl.style.color = "var(--retro-red)";
+        }
 
-        toggleTrophy('t-sober', currentDrinks === 0);
-        toggleTrophy('t-eco', currentSpent === 0);
-        toggleTrophy('t-master', currentDrinks > 0 && currentDrinks <= limitOms);
+        if (animate) {
+            triggerAnimation(isOverOms || isOverBudget);
+        }
 
-        renderChart();
+        let weekU = 0, weekS = 0;
+        let monthU = 0, monthS = 0;
+        let todayDate = new Date();
+        let currentMonth = todayDate.toISOString().substring(0, 7);
+        
+        for(let i=0; i<7; i++) {
+            let tempD = new Date();
+            tempD.setDate(tempD.getDate() - i);
+            let ds = tempD.toISOString().split('T')[0];
+            if(appData.history[ds]) {
+                weekU += appData.history[ds].units;
+                weekS += appData.history[ds].spent;
+            }
+        }
+        
+        Object.keys(appData.history).forEach(k => {
+            if(k.startsWith(currentMonth)) {
+                monthU += appData.history[k].units;
+                monthS += appData.history[k].spent;
+            }
+        });
+
+        document.getElementById('stat-week-units').innerText = weekU.toFixed(1) + " U";
+        document.getElementById('stat-week-spent').innerText = weekS.toFixed(2) + " €";
+        document.getElementById('stat-month-units').innerText = monthU.toFixed(1) + " U";
+        document.getElementById('stat-month-spent').innerText = monthS.toFixed(2) + " €";
+
+        renderCharts();
     }
 
-    function toggleTrophy(id, condition) {
-        const el = document.getElementById(id);
-        if (condition) el.classList.add('unlocked');
-        else el.classList.remove('unlocked');
-    }
-
-    // --- GRAPHIQUE AVEC CHART.JS ---
-    function renderChart() {
-        const view = document.getElementById('chart-view').value;
-        let labels = [];
-        let data = [];
+    // --- GRAPHIQUES ---
+    function renderCharts() {
+        const filter = document.getElementById('chart-filter').value;
         const today = new Date();
+        
+        let labels = [];
+        let unitsData = [];
+        let spentData = [];
 
-        function getDrinksForDate(dStr) {
-            return db.history[dStr] ? (db.history[dStr].drinks || 0) : 0;
-        }
+        function getDataForDate(dStr) { return appData.history[dStr] || { units: 0, spent: 0 }; }
 
-        if (view === 'days') {
+        if (filter === 'days') {
             for (let i = 6; i >= 0; i--) {
                 let d = new Date(today);
                 d.setDate(today.getDate() - i);
-                let dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+                let dStr = d.toISOString().split('T')[0];
                 labels.push(String(d.getDate()).padStart(2,'0') + '/' + String(d.getMonth()+1).padStart(2,'0'));
-                data.push(getDrinksForDate(dateStr));
+                let dat = getDataForDate(dStr);
+                unitsData.push(dat.units);
+                spentData.push(dat.spent);
             }
-        } 
-        else if (view === 'weeks') {
+        } else if (filter === 'weeks') {
             for (let i = 3; i >= 0; i--) {
-                let sumDrinks = 0;
+                let sU = 0; let sS = 0;
                 for(let j = 6; j >= 0; j--) {
                     let d = new Date(today);
                     d.setDate(today.getDate() - (i*7 + j));
-                    let dateStr = d.getFullYear() + '-' + String(d.getMonth()+1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-                    sumDrinks += getDrinksForDate(dateStr);
+                    let dat = getDataForDate(d.toISOString().split('T')[0]);
+                    sU += dat.units; sS += dat.spent;
                 }
-                labels.push(i === 0 ? 'Sem. Act' : 'S-'+i);
-                data.push(sumDrinks);
+                labels.push(i===0?'S-0':'S-'+i);
+                unitsData.push(sU); spentData.push(sS);
             }
-        } 
-        else if (view === 'months') {
+        } else if (filter === 'months') {
             for (let i = 5; i >= 0; i--) {
                 let d = new Date(today.getFullYear(), today.getMonth() - i, 1);
-                let monthStr = String(d.getMonth() + 1).padStart(2, '0');
-                let yearStr = String(d.getFullYear());
-                let prefix = yearStr + '-' + monthStr;
-                
-                let sumDrinks = 0;
-                for (const [key, value] of Object.entries(db.history)) {
-                    if (key.startsWith(prefix)) {
-                        sumDrinks += (value.drinks || 0);
-                    }
-                }
-                labels.push(monthStr + '/' + yearStr.slice(-2));
-                data.push(sumDrinks);
+                let prefix = d.toISOString().substring(0, 7);
+                let sU = 0; let sS = 0;
+                Object.keys(appData.history).forEach(k => {
+                    if(k.startsWith(prefix)) { sU += appData.history[k].units; sS += appData.history[k].spent; }
+                });
+                labels.push((d.getMonth()+1)+'/'+String(d.getFullYear()).slice(-2));
+                unitsData.push(sU); spentData.push(sS);
             }
         }
 
-        // Destruction de l'ancien graphique pour faire la nouvelle animation
-        const ctx = document.getElementById('historyChart').getContext('2d');
-        if (drinkChart !== null) {
-            drinkChart.destroy();
-        }
+        renderWineChart(labels, unitsData);
+        renderMoneyChart(labels, spentData);
+    }
 
-        // Création du nouveau beau graphique
-        drinkChart = new Chart(ctx, {
+    function renderWineChart(labels, unitsData) {
+        const container = document.getElementById('wine-chart');
+        container.innerHTML = ''; 
+
+        let maxUnits = Math.max(...unitsData);
+        let divisor = 1;
+        if (maxUnits > 6) divisor = Math.ceil(maxUnits / 6); 
+
+        unitsData.forEach((val, index) => {
+            let col = document.createElement('div');
+            col.className = 'wine-col';
+            
+            let lbl = document.createElement('div');
+            lbl.className = 'wine-label';
+            lbl.innerText = labels[index];
+            
+            let stack = document.createElement('div');
+            stack.className = 'wine-stack';
+            
+            let numGlasses = Math.round(val / divisor);
+            let glassesHtml = '';
+            for(let i=0; i<numGlasses; i++) {
+                glassesHtml += '<span>🍷</span>';
+            }
+            if (val === 0) glassesHtml = '<span style="opacity:0.2;">🍷</span>'; 
+            
+            stack.innerHTML = glassesHtml;
+
+            let mult = document.createElement('div');
+            mult.className = 'wine-multiplier';
+            if (divisor > 1 && val > 0) mult.innerText = 'x' + divisor;
+
+            col.appendChild(lbl);
+            col.appendChild(stack);
+            if (divisor > 1) col.appendChild(mult);
+            
+            container.appendChild(col);
+        });
+    }
+
+    function renderMoneyChart(labels, spentData) {
+        const ctx = document.getElementById('moneyChart').getContext('2d');
+        if (moneyChartInstance) moneyChartInstance.destroy();
+
+        let isGB = document.body.classList.contains('theme-gb');
+        let lineColor = isGB ? '#0f380f' : '#0000AA';
+        let pointColor = isGB ? '#306230' : '#FF0000';
+
+        moneyChartInstance = new Chart(ctx, {
             type: 'line',
             data: {
                 labels: labels,
                 datasets: [{
-                    label: 'Unités d\'alcool',
-                    data: data,
-                    borderColor: '#7b675b', // poke-brown
-                    backgroundColor: 'rgba(255, 204, 0, 0.4)', // poke-yellow transparent pour le remplissage
-                    borderWidth: 3,
-                    pointBackgroundColor: '#ffcc00', // points jaunes
-                    pointBorderColor: '#3a2e26', // bordure des points foncée
-                    pointRadius: 6,
+                    label: 'Dépensé (€)',
+                    data: spentData,
+                    borderColor: lineColor, 
+                    backgroundColor: lineColor,
+                    borderWidth: 4,
+                    pointBackgroundColor: pointColor, 
+                    pointRadius: 5,
                     pointHoverRadius: 8,
-                    fill: true, // remplit sous la courbe
-                    tension: 0.3 // Courbe fluide et dynamique
+                    stepped: true 
                 }]
             },
             options: {
                 responsive: true,
                 maintainAspectRatio: false,
-                animation: {
-                    duration: 1200,
-                    easing: 'easeOutQuart'
-                },
+                animation: false, 
                 scales: {
-                    y: {
+                    y: { 
                         beginAtZero: true,
-                        grid: { color: '#f1f2f6' },
-                        ticks: { font: { family: "'VT323', monospace", size: 16 } }
+                        ticks: { font: { family: "'VT323', monospace", size: 14 }, color: '#000' }
                     },
-                    x: {
-                        grid: { display: false },
-                        ticks: { font: { family: "'VT323', monospace", size: 14 } }
+                    x: { 
+                        ticks: { font: { family: "'VT323', monospace", size: 12 }, color: '#000' }
                     }
                 },
                 plugins: {
-                    legend: { display: false }, // Cache la légende pour faire plus épuré
-                    tooltip: {
-                        titleFont: { family: "'VT323', monospace", size: 16 },
-                        bodyFont: { family: "'VT323', monospace", size: 18 },
-                        backgroundColor: '#3a2e26',
-                        padding: 10
-                    }
+                    legend: { display: false }
                 }
             }
         });
     }
 
-    // Démarrage
-    renderApp();
-</script>
+    function saveData() { localStorage.setItem('drinkQuestData_v11', JSON.stringify(appData)); }
 
+</script>
 </body>
 </html>
